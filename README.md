@@ -4,6 +4,10 @@ A small Streamlit app for tracking tasks, priorities, time, and task status.
 
 This project started as a console-based Python task tracker and was later rebuilt as a multi-page Streamlit app with CSV storage and a simple notebook-style interface.
 
+## Live demo
+
+[Open the app on Streamlit](https://iana-task-tracker.streamlit.app/)
+
 ## Features
 
 - Add new tasks
