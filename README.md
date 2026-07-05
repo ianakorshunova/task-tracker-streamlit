@@ -63,23 +63,32 @@ task_tracker/
     ├── 1_Scary_Tasks.py
     ├── 2_Completed_Tasks.py
     └── 3_Task_Dump.py
-How to run
+```
+
+## How to run
 
 Install dependencies:
 
+```bash
 pip install -r requirements.txt
+```
 
 Run the app:
 
+```bash
 streamlit run app.py
-Future improvements
-Add filters by status and priority
-Improve the summary section
-Add download backup button
-Add tests for utility functions
-Add more polished UI for task cards
-Deploy to Streamlit Cloud
-Status
+```
 
-Work in progress.
+## Future improvements
+
+- Add filters by status and priority
+- Improve the summary section
+- Add download backup button
+- Add tests for utility functions
+- Add more polished UI for task cards
+- Deploy to Streamlit Cloud
+
+## Status
+
+Work in progress.  
 The app is functional locally and is being improved step by step.
