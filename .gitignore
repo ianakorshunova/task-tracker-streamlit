@@ -20,3 +20,6 @@ env/
 
 # Old console version
 task_tracker.py
+
+# Old data format
+tasks.json
