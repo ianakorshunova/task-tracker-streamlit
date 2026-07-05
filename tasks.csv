@@ -1,0 +1,8 @@
+title,status,priority,minutes,is_scary
+SQL practice,planned,high,45,False
+Send one message,planned,low,10,True
+Do the laundry,planned,low,5,False
+Go for a walk,planned,low,5,False
+Python practice,planned,medium,30,False
+Audio description project,done,high,90,False
+Read QA notes,planned,medium,20,False

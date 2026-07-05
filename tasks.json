@@ -1,0 +1,38 @@
+[
+    {
+        "title": "Python practice",
+        "status": "done",
+        "priority": "medium",
+        "minutes": 30
+    },
+    {
+        "title": "SQL practice",
+        "status": "planned",
+        "priority": "high",
+        "minutes": 45
+    },
+    {
+        "title": "Global3 AD",
+        "status": "done",
+        "priority": "high",
+        "minutes": 120
+    },
+    {
+        "title": "Quizlet QA",
+        "status": "planned",
+        "priority": "low",
+        "minutes": 15
+    },
+    {
+        "title": "Lu Ren scene",
+        "status": "done",
+        "priority": "medium",
+        "minutes": 60
+    },
+    {
+        "title": "watch ep 5 Into the Badlands",
+        "status": "planned",
+        "priority": "low",
+        "minutes": 30
+    }
+]
