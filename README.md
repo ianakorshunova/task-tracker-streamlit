@@ -8,6 +8,14 @@ This project started as a console-based Python task tracker and was later rebuil
 
 [Open the app on Streamlit](https://iana-task-tracker.streamlit.app/)
 
+## Data privacy note
+
+The deployed Streamlit app is public. Data entered in the demo version is not private and may be visible to other users.
+
+Please use only test/demo tasks in the public version. Do not enter personal, sensitive, or confidential information.
+
+For private use, run the app locally or connect it to a private database.
+
 ## Features
 
 - Add new tasks
