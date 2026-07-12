@@ -142,37 +142,34 @@ with left_col:
                     with button_col:
                         st.markdown("<div style='height: 0.7rem;'></div>", unsafe_allow_html=True)
 
-                        edit_col, delete_col = st.columns([1, 1])
+                        if st.button("Edit", key=f"edit_scary_{scary_index}", use_container_width=True):
+                            st.session_state.editing_scary_task_index = scary_index
+                            st.rerun()
 
-                        with edit_col:
-                            if st.button("Edit", key=f"edit_scary_{scary_index}"):
-                                st.session_state.editing_scary_task_index = scary_index
+                        if st.button("Del", key=f"delete_scary_{scary_index}", use_container_width=True):
+                            deleted_title = task["title"]
 
-                        with delete_col:
-                            if st.button("Del", key=f"delete_scary_{scary_index}"):
-                                deleted_title = task["title"]
+                            for index, original_task in enumerate(st.session_state.tasks):
+                                if (
+                                    original_task["title"] == task["title"]
+                                    and original_task["status"] == task["status"]
+                                    and original_task["priority"] == task["priority"]
+                                    and original_task["minutes"] == task["minutes"]
+                                    and original_task.get("is_scary", False) == task.get("is_scary", False)
+                                ):
+                                    st.session_state.tasks.pop(index)
+                                    break
 
-                                for index, original_task in enumerate(st.session_state.tasks):
-                                    if (
-                                        original_task["title"] == task["title"]
-                                        and original_task["status"] == task["status"]
-                                        and original_task["priority"] == task["priority"]
-                                        and original_task["minutes"] == task["minutes"]
-                                        and original_task.get("is_scary", False) == task.get("is_scary", False)
-                                    ):
-                                        st.session_state.tasks.pop(index)
-                                        break
+                            save_tasks_to_file(st.session_state.tasks)
 
-                                save_tasks_to_file(st.session_state.tasks)
+                            if "chosen_scary_task" in st.session_state:
+                                del st.session_state.chosen_scary_task
 
-                                if "chosen_scary_task" in st.session_state:
-                                    del st.session_state.chosen_scary_task
+                            if "editing_scary_task_index" in st.session_state:
+                                del st.session_state.editing_scary_task_index
 
-                                if "editing_scary_task_index" in st.session_state:
-                                    del st.session_state.editing_scary_task_index
-
-                                st.success(f"Deleted scary task: {deleted_title}")
-                                st.rerun()
+                            st.success(f"Deleted scary task: {deleted_title}")
+                            st.rerun()
 
             if st.session_state.get("editing_scary_task_index") == scary_index:
                 st.markdown("#### Edit scary task")

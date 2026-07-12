@@ -101,25 +101,21 @@ with main_col:
                     with button_col:
                         st.markdown("<div style='height: 0.7rem;'></div>", unsafe_allow_html=True)
 
-                        edit_col, delete_col = st.columns([1, 1])
+                        if st.button("Edit", key=f"edit_{index}", use_container_width=True):
+                            st.session_state.editing_task_index = index
+                            st.rerun()
 
-                        with edit_col:
-                            if st.button("Edit", key=f"edit_{index}"):
-                                st.session_state.editing_task_index = index
-                                st.rerun()
+                        if st.button("Del", key=f"delete_{index}", use_container_width=True):
+                            deleted_title = task["title"]
 
-                        with delete_col:
-                            if st.button("Del", key=f"delete_{index}"):
-                                deleted_title = task["title"]
+                            st.session_state.tasks.pop(index)
+                            save_tasks_to_file(st.session_state.tasks)
 
-                                st.session_state.tasks.pop(index)
-                                save_tasks_to_file(st.session_state.tasks)
+                            if "editing_task_index" in st.session_state:
+                                del st.session_state.editing_task_index
 
-                                if "editing_task_index" in st.session_state:
-                                    del st.session_state.editing_task_index
-
-                                st.success(f"Deleted task: {deleted_title}")
-                                st.rerun()
+                            st.success(f"Deleted task: {deleted_title}")
+                            st.rerun()
 
                 if st.session_state.get("editing_task_index") == index:
                     st.markdown("#### Edit task")
