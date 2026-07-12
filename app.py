@@ -86,36 +86,33 @@ with main_col:
     else:
         for index, task in enumerate(tasks):
                 with st.container(border=True):
-                    text_col, button_col = st.columns([3, 1.6])
 
-                    with text_col:
-                        st.markdown(f"**{task['title']}**")
+                    st.markdown(f"**{task['title']}**")
 
-                        scary_text = "🕯️ scary" if task.get("is_scary") == True else "not scary"
+                    scary_text = "🕯️ scary" if task.get("is_scary") == True else "not scary"
 
-                        st.markdown(
-                            f"<span class='task-caption'>{task['status']} · {task['priority']} · {task['minutes']} min · {scary_text}</span>",
-                            unsafe_allow_html=True,
-                        )
+                    st.markdown(
+                        f"<span class='task-caption'>{task['status']} · {task['priority']} · {task['minutes']} min · {scary_text}</span>",
+                        unsafe_allow_html=True,
+                    )
 
-                    with button_col:
-                        st.markdown("<div style='height: 0.7rem;'></div>", unsafe_allow_html=True)
+                    st.markdown("<div style='height: 0.7rem;'></div>", unsafe_allow_html=True)
 
-                        if st.button("Edit", key=f"edit_{index}", use_container_width=True):
-                            st.session_state.editing_task_index = index
-                            st.rerun()
+                    if st.button("Edit", key=f"edit_{index}", use_container_width=True):
+                        st.session_state.editing_task_index = index
+                        st.rerun()
 
-                        if st.button("Del", key=f"delete_{index}", use_container_width=True):
-                            deleted_title = task["title"]
+                    if st.button("Del", key=f"delete_{index}", use_container_width=True):
+                        deleted_title = task["title"]
 
-                            st.session_state.tasks.pop(index)
-                            save_tasks_to_file(st.session_state.tasks)
+                        st.session_state.tasks.pop(index)
+                        save_tasks_to_file(st.session_state.tasks)
 
-                            if "editing_task_index" in st.session_state:
-                                del st.session_state.editing_task_index
+                        if "editing_task_index" in st.session_state:
+                            del st.session_state.editing_task_index
 
-                            st.success(f"Deleted task: {deleted_title}")
-                            st.rerun()
+                        st.success(f"Deleted task: {deleted_title}")
+                        st.rerun()
 
                 if st.session_state.get("editing_task_index") == index:
                     st.markdown("#### Edit task")
