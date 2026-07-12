@@ -154,46 +154,42 @@ with left_col:
 
             with card_col:
                 with st.container(border=True):
-                    text_col, button_col = st.columns([3, 1.5])
+                    st.markdown(f"**{task['title']}**")
 
-                    with text_col:
-                        st.markdown(f"**{task['title']}**")
+                    scary_text = "🕯️ scary" if task.get("is_scary") == True else "not scary"
 
-                        scary_text = "🕯️ scary" if task.get("is_scary") == True else "not scary"
+                    st.markdown(
+                        f"<span class='task-caption'>{task['status']} · {task['priority']} · {task['minutes']} min · {scary_text}</span>",
+                        unsafe_allow_html=True,
+                    )
 
-                        st.markdown(
-                            f"<span class='task-caption'>{task['priority']} · {task['minutes']} min · {scary_text}</span>",
-                            unsafe_allow_html=True,
-                        )
+                    st.markdown("<div style='height: 0.7rem;'></div>", unsafe_allow_html=True)
 
-                    with button_col:
-                        st.markdown("<div style='height: 1.1rem;'></div>", unsafe_allow_html=True)
+                    if st.button("Edit", key=f"edit_dump_{dump_index}", use_container_width=True):
+                        st.session_state.editing_dump_task_index = dump_index
+                        st.rerun()
 
-                        if st.button("Edit", key=f"edit_dump_{dump_index}", use_container_width=True):
-                            st.session_state.editing_dump_task_index = dump_index
-                            st.rerun()
+                    if st.button("Del", key=f"delete_dump_{dump_index}", use_container_width=True):
+                        deleted_title = task["title"]
 
-                        if st.button("Del", key=f"delete_dump_{dump_index}", use_container_width=True):
-                            deleted_title = task["title"]
+                        for index, original_task in enumerate(st.session_state.tasks):
+                            if (
+                                original_task["title"] == task["title"]
+                                and original_task["status"] == task["status"]
+                                and original_task["priority"] == task["priority"]
+                                and original_task["minutes"] == task["minutes"]
+                                and original_task.get("is_scary", False) == task.get("is_scary", False)
+                            ):
+                                st.session_state.tasks.pop(index)
+                                break
 
-                            for index, original_task in enumerate(st.session_state.tasks):
-                                if (
-                                    original_task["title"] == task["title"]
-                                    and original_task["status"] == task["status"]
-                                    and original_task["priority"] == task["priority"]
-                                    and original_task["minutes"] == task["minutes"]
-                                    and original_task.get("is_scary", False) == task.get("is_scary", False)
-                                ):
-                                    st.session_state.tasks.pop(index)
-                                    break
+                        save_tasks_to_file(st.session_state.tasks)
 
-                            save_tasks_to_file(st.session_state.tasks)
+                        if "editing_dump_task_index" in st.session_state:
+                            del st.session_state.editing_dump_task_index
 
-                            if "editing_dump_task_index" in st.session_state:
-                                del st.session_state.editing_dump_task_index
-
-                            st.success(f"Deleted task: {deleted_title}")
-                            st.rerun()
+                        st.success(f"Deleted task: {deleted_title}")
+                        st.rerun()
 
             if st.session_state.get("editing_dump_task_index") == dump_index:
                 st.markdown("#### Edit task")
