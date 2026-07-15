@@ -1,6 +1,12 @@
 import streamlit as st
 
-from task_utils import create_task, load_css, load_tasks_from_file, save_tasks_to_file
+from task_utils import load_css
+from database import (
+    load_tasks_from_db,
+    add_task_to_db,
+    update_task_in_db,
+    delete_task_from_db,
+)
 
 st.set_page_config(page_title="Task Dump", page_icon="🧺", layout="wide")
 
@@ -10,8 +16,7 @@ st.title("🧺 Task Dump")
 st.caption("A quick place to throw small tasks before they disappear from your brain.")
 
 
-if "tasks" not in st.session_state:
-    st.session_state.tasks = load_tasks_from_file()
+st.session_state.tasks = load_tasks_from_db()
 
 
 with st.sidebar:
@@ -29,18 +34,17 @@ with st.sidebar:
             if title.strip() == "":
                 st.error("Please enter a task title.")
             else:
-                new_task = create_task(
+                add_task_to_db(
                     title=title,
                     status="planned",
                     priority=priority,
-                    minutes=minutes,
+                    minutes=int(minutes),
                     is_scary=is_scary,
                 )
 
-                st.session_state.tasks.append(new_task)
-                save_tasks_to_file(st.session_state.tasks)
-
+                st.session_state.tasks = load_tasks_from_db()
                 st.success(f"Added task: {title}")
+                st.rerun()
 
 
 tasks = st.session_state.tasks
@@ -49,97 +53,6 @@ dump_tasks = [
     task for task in tasks
     if task["status"] == "planned" and task["minutes"] <= 10
 ]
-
-# st.subheader("Small planned tasks")
-
-# if len(dump_tasks) == 0:
-#     st.info("No small planned tasks yet.")
-# else:
-#     for dump_index, task in enumerate(dump_tasks):
-#         card_col, empty_col = st.columns([2.3, 3])
-
-#         with card_col:
-#             with st.container(border=True):
-#                 text_col, button_col = st.columns([3, 1.5])
-
-#                 with text_col:
-#                     st.markdown(f"**{task['title']}**")
-
-#                     scary_text = "🕯️ scary" if task.get("is_scary") == True else "not scary"
-
-#                     st.markdown(
-#                         f"<span class='task-caption'>{task['priority']} · {task['minutes']} min · {scary_text}</span>",
-#                         unsafe_allow_html=True,
-#                     )
-                
-#     if st.session_state.get("editing_dump_task_index") == dump_index:
-#         st.markdown("#### Edit task")
-
-#         if st.session_state.get("editing_dump_task_index") == dump_index:
-#             st.markdown("#### Edit task")
-
-#             with st.form(f"edit_dump_task_form_{dump_index}"):
-#                 edited_title = st.text_input(
-#                     "Task title",
-#                     value=task["title"],
-#                     key=f"edit_dump_title_{dump_index}",
-#                 )
-
-#                 edited_priority = st.selectbox(
-#                     "Priority",
-#                     ["low", "medium", "high"],
-#                     index=["low", "medium", "high"].index(task["priority"]),
-#                     key=f"edit_dump_priority_{dump_index}",
-#                 )
-
-#                 edited_minutes = st.number_input(
-#                     "Minutes",
-#                     min_value=1,
-#                     step=5,
-#                     value=int(task["minutes"]),
-#                     key=f"edit_dump_minutes_{dump_index}",
-#                 )
-
-#                 edited_is_scary = st.checkbox(
-#                     "This task is scary",
-#                     value=task.get("is_scary", False),
-#                     key=f"edit_dump_is_scary_{dump_index}",
-#                 )
-
-#                 save_changes = st.form_submit_button("Save changes")
-#                 cancel_edit = st.form_submit_button("Cancel")
-
-#                 if save_changes:
-#                     if edited_title.strip() == "":
-#                         st.error("Please enter a task title.")
-#                     else:
-#                         for index, original_task in enumerate(st.session_state.tasks):
-#                             if (
-#                                 original_task["title"] == task["title"]
-#                                 and original_task["status"] == task["status"]
-#                                 and original_task["priority"] == task["priority"]
-#                                 and original_task["minutes"] == task["minutes"]
-#                                 and original_task.get("is_scary", False) == task.get("is_scary", False)
-#                             ):
-#                                 st.session_state.tasks[index] = create_task(
-#                                     title=edited_title,
-#                                     status="planned",
-#                                     priority=edited_priority,
-#                                     minutes=edited_minutes,
-#                                     is_scary=edited_is_scary,
-#                                 )
-#                                 break
-
-#                         save_tasks_to_file(st.session_state.tasks)
-
-#                         del st.session_state.editing_dump_task_index
-
-#                         st.success("Task updated.")
-#                         st.rerun()
-
-#                 if cancel_edit:
-#                     del st.session_state.editing_dump_task_index
-#                     st.rerun()
 
 left_col, right_col = st.columns([3.2, 1])
 
@@ -165,25 +78,15 @@ with left_col:
 
                     st.markdown("<div style='height: 0.7rem;'></div>", unsafe_allow_html=True)
 
-                    if st.button("Edit", key=f"edit_dump_{dump_index}", use_container_width=True):
+                    if st.button("Edit", key=f"edit_dump_{task['id']}", use_container_width=True):
                         st.session_state.editing_dump_task_index = dump_index
                         st.rerun()
 
-                    if st.button("Del", key=f"delete_dump_{dump_index}", use_container_width=True):
+                    if st.button("Del", key=f"delete_dump_{task['id']}", use_container_width=True):
                         deleted_title = task["title"]
 
-                        for index, original_task in enumerate(st.session_state.tasks):
-                            if (
-                                original_task["title"] == task["title"]
-                                and original_task["status"] == task["status"]
-                                and original_task["priority"] == task["priority"]
-                                and original_task["minutes"] == task["minutes"]
-                                and original_task.get("is_scary", False) == task.get("is_scary", False)
-                            ):
-                                st.session_state.tasks.pop(index)
-                                break
-
-                        save_tasks_to_file(st.session_state.tasks)
+                        delete_task_from_db(task["id"])
+                        st.session_state.tasks = load_tasks_from_db()
 
                         if "editing_dump_task_index" in st.session_state:
                             del st.session_state.editing_dump_task_index
@@ -229,32 +132,26 @@ with left_col:
                         if edited_title.strip() == "":
                             st.error("Please enter a task title.")
                         else:
-                            for index, original_task in enumerate(st.session_state.tasks):
-                                if (
-                                    original_task["title"] == task["title"]
-                                    and original_task["status"] == task["status"]
-                                    and original_task["priority"] == task["priority"]
-                                    and original_task["minutes"] == task["minutes"]
-                                    and original_task.get("is_scary", False) == task.get("is_scary", False)
-                                ):
-                                    st.session_state.tasks[index] = create_task(
-                                        title=edited_title,
-                                        status="planned",
-                                        priority=edited_priority,
-                                        minutes=edited_minutes,
-                                        is_scary=edited_is_scary,
-                                    )
-                                    break
+                            update_task_in_db(
+                                task_id=task["id"],
+                                title=edited_title,
+                                status="planned",
+                                priority=edited_priority,
+                                minutes=int(edited_minutes),
+                                is_scary=edited_is_scary,
+                            )
 
-                            save_tasks_to_file(st.session_state.tasks)
+                            st.session_state.tasks = load_tasks_from_db()
 
-                            del st.session_state.editing_dump_task_index
+                            if "editing_dump_task_index" in st.session_state:
+                                del st.session_state.editing_dump_task_index
 
                             st.success("Task updated.")
                             st.rerun()
 
                     if cancel_edit:
-                        del st.session_state.editing_dump_task_index
+                        if "editing_dump_task_index" in st.session_state:
+                            del st.session_state.editing_dump_task_index
                         st.rerun()
 
     st.subheader("Summary")
@@ -284,4 +181,4 @@ with right_col:
 
     st.info("Tiny task rule: if it takes less than 10 minutes, it belongs here.")
 
-    st.caption("Data is saved automatically to tasks.csv.")
+    st.caption("Data is saved automatically to the connected PostgreSQL database.")

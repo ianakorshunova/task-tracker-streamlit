@@ -1,3 +1,9 @@
+from database import (
+    load_tasks_from_db,
+    update_task_in_db,
+    delete_task_from_db,
+)
+
 import streamlit as st
 
 from task_utils import create_task, load_css, load_tasks_from_file, save_tasks_to_file
@@ -14,6 +20,7 @@ if "tasks" not in st.session_state:
     st.session_state.tasks = load_tasks_from_file()
 
 
+st.session_state.tasks = load_tasks_from_db()
 tasks = st.session_state.tasks
 
 completed_tasks = [
@@ -46,25 +53,16 @@ else:
                 st.write("—")
 
         with col5:
-            if st.button("Edit", key=f"edit_completed_{completed_index}"):
+            if st.button("Edit", key=f"edit_completed_{task['id']}"):
                 st.session_state.editing_completed_task_index = completed_index
+                st.rerun()
 
         with col6:
-            if st.button("Delete", key=f"delete_completed_{completed_index}"):
+            if st.button("Delete", key=f"delete_completed_{task['id']}"):
                 deleted_title = task["title"]
 
-                for index, original_task in enumerate(st.session_state.tasks):
-                    if (
-                        original_task["title"] == task["title"]
-                        and original_task["status"] == task["status"]
-                        and original_task["priority"] == task["priority"]
-                        and original_task["minutes"] == task["minutes"]
-                        and original_task.get("is_scary", False) == task.get("is_scary", False)
-                    ):
-                        st.session_state.tasks.pop(index)
-                        break
-
-                save_tasks_to_file(st.session_state.tasks)
+                delete_task_from_db(task["id"])
+                st.session_state.tasks = load_tasks_from_db()
 
                 if "editing_completed_task_index" in st.session_state:
                     del st.session_state.editing_completed_task_index
@@ -75,25 +73,25 @@ else:
         if st.session_state.get("editing_completed_task_index") == completed_index:
             st.markdown("#### Edit completed task")
 
-            with st.form(f"edit_completed_task_form_{completed_index}"):
+            with st.form(f"edit_completed_task_form_{task['id']}"):
                 edited_title = st.text_input(
                     "Task title",
                     value=task["title"],
-                    key=f"edit_completed_title_{completed_index}",
+                    key=f"edit_completed_title_{task['id']}"
                 )
 
                 edited_status = st.selectbox(
                     "Status",
                     ["planned", "done"],
                     index=["planned", "done"].index(task["status"]),
-                    key=f"edit_completed_status_{completed_index}",
+                    key=f"edit_completed_status_{task['id']}"
                 )
 
                 edited_priority = st.selectbox(
                     "Priority",
                     ["low", "medium", "high"],
                     index=["low", "medium", "high"].index(task["priority"]),
-                    key=f"edit_completed_priority_{completed_index}",
+                    key=f"edit_completed_priority_{task['id']}"
                 )
 
                 edited_minutes = st.number_input(
@@ -101,13 +99,13 @@ else:
                     min_value=1,
                     step=5,
                     value=int(task["minutes"]),
-                    key=f"edit_completed_minutes_{completed_index}",
+                    key=f"edit_completed_minutes_{task['id']}"
                 )
 
                 edited_is_scary = st.checkbox(
                     "This task is scary",
                     value=task.get("is_scary", False),
-                    key=f"edit_completed_is_scary_{completed_index}",
+                    key=f"edit_completed_is_scary_{task['id']}"
                 )
 
                 save_changes = st.form_submit_button("Save changes")
@@ -117,32 +115,26 @@ else:
                     if edited_title.strip() == "":
                         st.error("Please enter a task title.")
                     else:
-                        for index, original_task in enumerate(st.session_state.tasks):
-                            if (
-                                original_task["title"] == task["title"]
-                                and original_task["status"] == task["status"]
-                                and original_task["priority"] == task["priority"]
-                                and original_task["minutes"] == task["minutes"]
-                                and original_task.get("is_scary", False) == task.get("is_scary", False)
-                            ):
-                                st.session_state.tasks[index] = create_task(
-                                    title=edited_title,
-                                    status=edited_status,
-                                    priority=edited_priority,
-                                    minutes=edited_minutes,
-                                    is_scary=edited_is_scary,
-                                )
-                                break
+                        update_task_in_db(
+                            task_id=task["id"],
+                            title=edited_title,
+                            status=edited_status,
+                            priority=edited_priority,
+                            minutes=int(edited_minutes),
+                            is_scary=edited_is_scary,
+                        )
 
-                        save_tasks_to_file(st.session_state.tasks)
+                        st.session_state.tasks = load_tasks_from_db()
 
-                        del st.session_state.editing_completed_task_index
+                        if "editing_completed_task_index" in st.session_state:
+                            del st.session_state.editing_completed_task_index
 
                         st.success("Completed task updated.")
                         st.rerun()
 
                 if cancel_edit:
-                    del st.session_state.editing_completed_task_index
+                    if "editing_completed_task_index" in st.session_state:
+                        del st.session_state.editing_completed_task_index
                     st.rerun()
 
 total_completed_minutes = sum(task["minutes"] for task in completed_tasks)
@@ -158,4 +150,4 @@ if len(completed_tasks) > 0:
 
     st.metric("Completed scary tasks", len(scary_completed))
 
-st.caption("Data is saved automatically to tasks.csv.")
+st.caption("Data is saved automatically to the connected PostgreSQL database.")

@@ -249,6 +249,6 @@ with left_col:
                             del st.session_state.editing_scary_task_index
                         st.rerun()
 
-st.caption("Data is saved automatically to tasks.csv.")
+st.caption("Data is saved automatically to the connected PostgreSQL database.")
 
 
