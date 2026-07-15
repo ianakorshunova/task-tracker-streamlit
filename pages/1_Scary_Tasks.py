@@ -4,6 +4,12 @@ import streamlit as st
 
 from task_utils import create_task, load_css, load_tasks_from_file, save_tasks_to_file
 
+from database import (
+    load_tasks_from_db,
+    update_task_in_db,
+    delete_task_from_db,
+)
+
 SCARY_DONE_MESSAGES = [
     "You spooked out the spooky task!",
     "The tiny ghost has left the building.",
@@ -25,9 +31,8 @@ if "scary_done_message" in st.session_state:
     st.toast(st.session_state.scary_done_message, icon="👻")
     del st.session_state.scary_done_message
 
-
-if "tasks" not in st.session_state:
-    st.session_state.tasks = load_tasks_from_file()
+st.session_state.tasks = load_tasks_from_db()
+tasks = st.session_state.tasks
 
 
 tasks = st.session_state.tasks
@@ -142,21 +147,35 @@ with left_col:
                         st.session_state.editing_scary_task_index = scary_index
                         st.rerun()
 
-                    if st.button("Del", key=f"delete_scary_{scary_index}", use_container_width=True):
+                    # if st.button("Del", key=f"delete_scary_{scary_index}", use_container_width=True):
+                    #     deleted_title = task["title"]
+
+                    #     for index, original_task in enumerate(st.session_state.tasks):
+                    #         if (
+                    #             original_task["title"] == task["title"]
+                    #             and original_task["status"] == task["status"]
+                    #             and original_task["priority"] == task["priority"]
+                    #             and original_task["minutes"] == task["minutes"]
+                    #             and original_task.get("is_scary", False) == task.get("is_scary", False)
+                    #         ):
+                    #             st.session_state.tasks.pop(index)
+                    #             break
+
+                    #     save_tasks_to_file(st.session_state.tasks)
+
+                    #     if "chosen_scary_task" in st.session_state:
+                    #         del st.session_state.chosen_scary_task
+
+                    #     if "editing_scary_task_index" in st.session_state:
+                    #         del st.session_state.editing_scary_task_index
+
+                    #     st.success(f"Deleted scary task: {deleted_title}")
+                    #     st.rerun()
+                    if st.button("Del", key=f"delete_scary_{task['id']}", use_container_width=True):
                         deleted_title = task["title"]
 
-                        for index, original_task in enumerate(st.session_state.tasks):
-                            if (
-                                original_task["title"] == task["title"]
-                                and original_task["status"] == task["status"]
-                                and original_task["priority"] == task["priority"]
-                                and original_task["minutes"] == task["minutes"]
-                                and original_task.get("is_scary", False) == task.get("is_scary", False)
-                            ):
-                                st.session_state.tasks.pop(index)
-                                break
-
-                        save_tasks_to_file(st.session_state.tasks)
+                        delete_task_from_db(task["id"])
+                        st.session_state.tasks = load_tasks_from_db()
 
                         if "chosen_scary_task" in st.session_state:
                             del st.session_state.chosen_scary_task
@@ -205,35 +224,29 @@ with left_col:
                         if edited_title.strip() == "":
                             st.error("Please enter a task title.")
                         else:
-                            for index, original_task in enumerate(st.session_state.tasks):
-                                if (
-                                    original_task["title"] == task["title"]
-                                    and original_task["status"] == task["status"]
-                                    and original_task["priority"] == task["priority"]
-                                    and original_task["minutes"] == task["minutes"]
-                                    and original_task.get("is_scary", False) == task.get("is_scary", False)
-                                ):
-                                    st.session_state.tasks[index] = create_task(
-                                        title=edited_title,
-                                        status="planned",
-                                        priority=edited_priority,
-                                        minutes=edited_minutes,
-                                        is_scary=edited_is_scary,
-                                    )
-                                    break
+                            update_task_in_db(
+                                task_id=task["id"],
+                                title=edited_title,
+                                status=task["status"],
+                                priority=edited_priority,
+                                minutes=int(edited_minutes),
+                                is_scary=edited_is_scary,
+                            )
 
-                            save_tasks_to_file(st.session_state.tasks)
+                            st.session_state.tasks = load_tasks_from_db()
 
                             if "chosen_scary_task" in st.session_state:
                                 del st.session_state.chosen_scary_task
 
-                            del st.session_state.editing_scary_task_index
+                            if "editing_scary_task_index" in st.session_state:
+                                del st.session_state.editing_scary_task_index
 
                             st.success("Scary task updated.")
                             st.rerun()
 
                     if cancel_edit:
-                        del st.session_state.editing_scary_task_index
+                        if "editing_scary_task_index" in st.session_state:
+                            del st.session_state.editing_scary_task_index
                         st.rerun()
 
 st.caption("Data is saved automatically to tasks.csv.")
