@@ -10,6 +10,13 @@ from task_utils import (
     save_tasks_to_file,
 )
 
+from database import (
+    load_tasks_from_db,
+    add_task_to_db,
+    update_task_in_db,
+    delete_task_from_db,
+)
+
 def add_task(title, status, priority, minutes, is_scary=False):
     new_task = create_task(title, status, priority, minutes, is_scary)
     st.session_state.tasks.append(new_task)
@@ -19,8 +26,10 @@ def remove_task(task_index):
     st.session_state.tasks.pop(task_index)
 
 
+# if "tasks" not in st.session_state:
+#     st.session_state.tasks = load_tasks_from_file()
 if "tasks" not in st.session_state:
-    st.session_state.tasks = load_tasks_from_file()
+    st.session_state.tasks = load_tasks_from_db()
 
 
 st.set_page_config(page_title="Task Tracker", page_icon="📝", layout="wide")
@@ -39,6 +48,7 @@ with st.sidebar:
         status = st.selectbox("Status", ["planned", "done"])
         priority = st.selectbox("Priority", ["low", "medium", "high"], index=1)
         minutes = st.number_input("Minutes", min_value=1, step=5, value=30)
+        is_scary = st.checkbox("This task is scary")
 
         submitted = st.form_submit_button("Add task")
 
@@ -46,9 +56,17 @@ with st.sidebar:
             if title.strip() == "":
                 st.error("Please enter a task title.")
             else:
-                add_task(title, status, priority, int(minutes))
-                save_tasks_to_file(st.session_state.tasks)
+                add_task_to_db(
+                    title=title,
+                    status=status,
+                    priority=priority,
+                    minutes=int(minutes),
+                    is_scary=is_scary,
+                )
+
+                st.session_state.tasks = load_tasks_from_db()
                 st.success(f"Added task: {title}")
+                st.rerun()
 
     st.divider()
 
@@ -98,15 +116,15 @@ with main_col:
 
                     st.markdown("<div style='height: 0.7rem;'></div>", unsafe_allow_html=True)
 
-                    if st.button("Edit", key=f"edit_{index}", use_container_width=True):
+                    if st.button("Edit", key=f"edit_{task['id']}", use_container_width=True):
                         st.session_state.editing_task_index = index
                         st.rerun()
 
-                    if st.button("Del", key=f"delete_{index}", use_container_width=True):
+                    if st.button("Del", key=f"delete_{task['id']}", use_container_width=True):
                         deleted_title = task["title"]
 
-                        st.session_state.tasks.pop(index)
-                        save_tasks_to_file(st.session_state.tasks)
+                        delete_task_from_db(task["id"])
+                        st.session_state.tasks = load_tasks_from_db()
 
                         if "editing_task_index" in st.session_state:
                             del st.session_state.editing_task_index
@@ -117,25 +135,25 @@ with main_col:
                 if st.session_state.get("editing_task_index") == index:
                     st.markdown("#### Edit task")
 
-                    with st.form(f"edit_task_form_{index}"):
+                    with st.form(f"edit_task_form_{task['id']}"):
                         edited_title = st.text_input(
                             "Task title",
                             value=task["title"],
-                                key=f"edit_title_{index}",
+                                key=f"edit_title_{task['id']}"
                         )
 
                         edited_status = st.selectbox(
                             "Status",
                             ["planned", "done"],
                             index=["planned", "done"].index(task["status"]),
-                            key=f"edit_status_{index}",
+                            key=f"edit_status_{task['id']}"
                         )
 
                         edited_priority = st.selectbox(
                             "Priority",
                             ["low", "medium", "high"],
                             index=["low", "medium", "high"].index(task["priority"]),
-                            key=f"edit_priority_{index}",
+                            key=f"edit_priority_{task['id']}"
                         )
 
                         edited_minutes = st.number_input(
@@ -143,41 +161,43 @@ with main_col:
                             min_value=1,
                             step=5,
                             value=int(task["minutes"]),
-                            key=f"edit_minutes_{index}",
+                            key=f"edit_minutes_{task['id']}"
                         )
 
                         edited_is_scary = st.checkbox(
                                 "This task is scary",
                                 value=task.get("is_scary", False),
-                                key=f"edit_is_scary_{index}",
+                                key=f"edit_is_scary_{task['id']}"
                             )
 
                         save_changes = st.form_submit_button("Save changes")
                         cancel_edit = st.form_submit_button("Cancel")
+                        if cancel_edit:
+                            if "editing_task_index" in st.session_state:
+                                del st.session_state.editing_task_index
+                            st.rerun()
 
                         if save_changes:
                             if edited_title.strip() == "":
                                 st.error("Please enter a task title.")
                             else:
-                                st.session_state.tasks[index] = create_task(
+                                update_task_in_db(
+                                    task_id=task["id"],
                                     title=edited_title,
                                     status=edited_status,
                                     priority=edited_priority,
-                                    minutes=edited_minutes,
+                                    minutes=int(edited_minutes),
                                     is_scary=edited_is_scary,
                                 )
 
-                                save_tasks_to_file(st.session_state.tasks)
+                                st.session_state.tasks = load_tasks_from_db()
 
-                                del st.session_state.editing_task_index
+                                if "editing_task_index" in st.session_state:
+                                    del st.session_state.editing_task_index
 
                                 st.success("Task updated.")
                                 st.rerun()
-
-                        if cancel_edit:
-                            del st.session_state.editing_task_index
-                            st.rerun()
-            
+                                    
 with side_col:
     st.subheader("Quick summary")
 

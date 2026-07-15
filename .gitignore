@@ -23,3 +23,16 @@ task_tracker.py
 
 # Old data format
 tasks.json
+
+# Local environment variables
+.env
+.env.local
+
+# Local database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Data backups / exports
+*_backup.csv
+backup_*.csv
