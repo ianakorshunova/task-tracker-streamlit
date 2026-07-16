@@ -1,5 +1,6 @@
 import pandas as pd
 import streamlit as st
+from auth import show_auth_screen
 
 from task_utils import (
     DEFAULT_TASKS,
@@ -26,21 +27,31 @@ def remove_task(task_index):
     st.session_state.tasks.pop(task_index)
 
 
-# if "tasks" not in st.session_state:
-#     st.session_state.tasks = load_tasks_from_file()
-if "tasks" not in st.session_state:
-    st.session_state.tasks = load_tasks_from_db()
-
-
 st.set_page_config(page_title="Task Tracker", page_icon="📝", layout="wide")
 
+if "user" not in st.session_state:
+    show_auth_screen()
+    st.stop()
+
+current_user_id = st.session_state.user["id"]
+
 st.markdown(load_css(), unsafe_allow_html=True)
+
+st.session_state.tasks = load_tasks_from_db(current_user_id)
+tasks = st.session_state.tasks
 
 st.title("📝 Task Tracker")
 st.caption("A small Streamlit app for tracking tasks, priorities, and time.")
 
 
 with st.sidebar:
+    if "user" in st.session_state:
+        st.caption(f"Logged in as: {st.session_state.user['username']}")
+
+        if st.button("Log out"):
+            del st.session_state.user
+            st.rerun()
+
     st.header("Add new task")
 
     with st.form("add_task_form", clear_on_submit=True):
@@ -62,9 +73,10 @@ with st.sidebar:
                     priority=priority,
                     minutes=int(minutes),
                     is_scary=is_scary,
+                    user_id=current_user_id,
                 )
 
-                st.session_state.tasks = load_tasks_from_db()
+                st.session_state.tasks = load_tasks_from_db(current_user_id)
                 st.success(f"Added task: {title}")
                 st.rerun()
 
@@ -123,8 +135,8 @@ with main_col:
                     if st.button("Del", key=f"delete_{task['id']}", use_container_width=True):
                         deleted_title = task["title"]
 
-                        delete_task_from_db(task["id"])
-                        st.session_state.tasks = load_tasks_from_db()
+                        delete_task_from_db(task["id"], current_user_id)
+                        st.session_state.tasks = load_tasks_from_db(current_user_id)
 
                         if "editing_task_index" in st.session_state:
                             del st.session_state.editing_task_index
@@ -188,9 +200,10 @@ with main_col:
                                     priority=edited_priority,
                                     minutes=int(edited_minutes),
                                     is_scary=edited_is_scary,
+                                    user_id=current_user_id,
                                 )
 
-                                st.session_state.tasks = load_tasks_from_db()
+                                st.session_state.tasks = load_tasks_from_db(current_user_id)
 
                                 if "editing_task_index" in st.session_state:
                                     del st.session_state.editing_task_index

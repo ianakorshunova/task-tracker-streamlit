@@ -10,13 +10,18 @@ from database import (
 
 st.set_page_config(page_title="Task Dump", page_icon="🧺", layout="wide")
 
+if "user" not in st.session_state:
+    st.warning("Please log in from the main page first.")
+    st.stop()
+
+current_user_id = st.session_state.user["id"]
+
 st.markdown(load_css(), unsafe_allow_html=True)
 
 st.title("🧺 Task Dump")
 st.caption("A quick place to throw small tasks before they disappear from your brain.")
 
-
-st.session_state.tasks = load_tasks_from_db()
+st.session_state.tasks = load_tasks_from_db(current_user_id)
 
 
 with st.sidebar:
@@ -42,7 +47,7 @@ with st.sidebar:
                     is_scary=is_scary,
                 )
 
-                st.session_state.tasks = load_tasks_from_db()
+                st.session_state.tasks = load_tasks_from_db(current_user_id)
                 st.success(f"Added task: {title}")
                 st.rerun()
 
@@ -85,8 +90,8 @@ with left_col:
                     if st.button("Del", key=f"delete_dump_{task['id']}", use_container_width=True):
                         deleted_title = task["title"]
 
-                        delete_task_from_db(task["id"])
-                        st.session_state.tasks = load_tasks_from_db()
+                        delete_task_from_db(task["id"], current_user_id)
+                        st.session_state.tasks = load_tasks_from_db(current_user_id)
 
                         if "editing_dump_task_index" in st.session_state:
                             del st.session_state.editing_dump_task_index
@@ -139,9 +144,10 @@ with left_col:
                                 priority=edited_priority,
                                 minutes=int(edited_minutes),
                                 is_scary=edited_is_scary,
+                                user_id=current_user_id
                             )
 
-                            st.session_state.tasks = load_tasks_from_db()
+                            st.session_state.tasks = load_tasks_from_db(current_user_id)
 
                             if "editing_dump_task_index" in st.session_state:
                                 del st.session_state.editing_dump_task_index

@@ -10,6 +10,12 @@ from task_utils import create_task, load_css, load_tasks_from_file, save_tasks_t
 
 st.set_page_config(page_title="Completed Tasks", page_icon="✅", layout="wide")
 
+if "user" not in st.session_state:
+    st.warning("Please log in from the main page first.")
+    st.stop()
+
+current_user_id = st.session_state.user["id"]
+
 st.markdown(load_css(), unsafe_allow_html=True)
 
 st.title("✅ Completed Tasks")
@@ -20,7 +26,7 @@ if "tasks" not in st.session_state:
     st.session_state.tasks = load_tasks_from_file()
 
 
-st.session_state.tasks = load_tasks_from_db()
+st.session_state.tasks = load_tasks_from_db(current_user_id)
 tasks = st.session_state.tasks
 
 completed_tasks = [
@@ -61,8 +67,8 @@ else:
             if st.button("Delete", key=f"delete_completed_{task['id']}"):
                 deleted_title = task["title"]
 
-                delete_task_from_db(task["id"])
-                st.session_state.tasks = load_tasks_from_db()
+                delete_task_from_db(task["id"], current_user_id)
+                st.session_state.tasks = load_tasks_from_db(current_user_id)
 
                 if "editing_completed_task_index" in st.session_state:
                     del st.session_state.editing_completed_task_index
@@ -122,9 +128,10 @@ else:
                             priority=edited_priority,
                             minutes=int(edited_minutes),
                             is_scary=edited_is_scary,
+                            user_id=current_user_id
                         )
 
-                        st.session_state.tasks = load_tasks_from_db()
+                        st.session_state.tasks = load_tasks_from_db(current_user_id)
 
                         if "editing_completed_task_index" in st.session_state:
                             del st.session_state.editing_completed_task_index

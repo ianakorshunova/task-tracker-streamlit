@@ -22,6 +22,12 @@ SCARY_DONE_MESSAGES = [
 
 st.set_page_config(page_title="Scary Tasks", page_icon="🕯️", layout="wide")
 
+if "user" not in st.session_state:
+    st.warning("Please log in from the main page first.")
+    st.stop()
+
+current_user_id = st.session_state.user["id"]
+
 st.markdown(load_css(), unsafe_allow_html=True)
 
 st.title("🕯️ Scary Tasks")
@@ -31,7 +37,7 @@ if "scary_done_message" in st.session_state:
     st.toast(st.session_state.scary_done_message, icon="👻")
     del st.session_state.scary_done_message
 
-st.session_state.tasks = load_tasks_from_db()
+st.session_state.tasks = load_tasks_from_db(current_user_id)
 tasks = st.session_state.tasks
 
 
@@ -174,8 +180,8 @@ with left_col:
                     if st.button("Del", key=f"delete_scary_{task['id']}", use_container_width=True):
                         deleted_title = task["title"]
 
-                        delete_task_from_db(task["id"])
-                        st.session_state.tasks = load_tasks_from_db()
+                        delete_task_from_db(task["id"], current_user_id)
+                        st.session_state.tasks = load_tasks_from_db(current_user_id)
 
                         if "chosen_scary_task" in st.session_state:
                             del st.session_state.chosen_scary_task
@@ -231,9 +237,10 @@ with left_col:
                                 priority=edited_priority,
                                 minutes=int(edited_minutes),
                                 is_scary=edited_is_scary,
+                                user_id=current_user_id
                             )
 
-                            st.session_state.tasks = load_tasks_from_db()
+                            st.session_state.tasks = load_tasks_from_db(current_user_id)
 
                             if "chosen_scary_task" in st.session_state:
                                 del st.session_state.chosen_scary_task
