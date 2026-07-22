@@ -252,3 +252,7 @@ p, div, span, label {
 .summary-row strong {
     font-size: 1.15rem;
 }
+
+.stButton button {
+    white-space: nowrap;
+}

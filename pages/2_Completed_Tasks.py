@@ -41,7 +41,7 @@ if len(completed_tasks) == 0:
     st.info("No completed tasks yet.")
 else:
     for completed_index, task in enumerate(completed_tasks):
-        col1, col2, col3, col4, col5, col6 = st.columns([4, 2, 2, 2, 1, 1])
+        col1, col2, col3, col4, actions_col = st.columns([4, 2, 2, 2, 3])
 
         with col1:
             st.write(task["title"])
@@ -58,23 +58,26 @@ else:
             else:
                 st.write("—")
 
-        with col5:
-            if st.button("Edit", key=f"edit_completed_{task['id']}"):
-                st.session_state.editing_completed_task_index = completed_index
-                st.rerun()
+        with actions_col:
+            edit_col, delete_col = st.columns(2)
 
-        with col6:
-            if st.button("Delete", key=f"delete_completed_{task['id']}"):
-                deleted_title = task["title"]
+            with edit_col:
+                if st.button("Edit", key=f"edit_completed_{task['id']}", use_container_width=True):
+                    st.session_state.editing_completed_task_index = completed_index
+                    st.rerun()
 
-                delete_task_from_db(task["id"], current_user_id)
-                st.session_state.tasks = load_tasks_from_db(current_user_id)
+            with delete_col:
+                if st.button("Delete", key=f"delete_completed_{task['id']}", use_container_width=True):
+                    deleted_title = task["title"]
 
-                if "editing_completed_task_index" in st.session_state:
-                    del st.session_state.editing_completed_task_index
+                    delete_task_from_db(task["id"], current_user_id)
+                    st.session_state.tasks = load_tasks_from_db(current_user_id)
 
-                st.success(f"Deleted task: {deleted_title}")
-                st.rerun()
+                    if "editing_completed_task_index" in st.session_state:
+                        del st.session_state.editing_completed_task_index
+
+                    st.success(f"Deleted task: {deleted_title}")
+                    st.rerun()
 
         if st.session_state.get("editing_completed_task_index") == completed_index:
             st.markdown("#### Edit completed task")

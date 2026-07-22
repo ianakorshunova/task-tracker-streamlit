@@ -45,6 +45,7 @@ with st.sidebar:
                     priority=priority,
                     minutes=int(minutes),
                     is_scary=is_scary,
+                    user_id=current_user_id,
                 )
 
                 st.session_state.tasks = load_tasks_from_db(current_user_id)
