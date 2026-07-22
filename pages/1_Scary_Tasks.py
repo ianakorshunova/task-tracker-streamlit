@@ -40,6 +40,10 @@ if "scary_done_message" in st.session_state:
 st.session_state.tasks = load_tasks_from_db(current_user_id)
 tasks = st.session_state.tasks
 
+st.session_state.tasks = [
+    task for task in load_tasks_from_db(current_user_id)
+    if "id" in task
+]
 
 tasks = st.session_state.tasks
 
