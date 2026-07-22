@@ -263,6 +263,7 @@ with left_col:
 
                             # if "editing_scary_task_index" in st.session_state:
                             #     del st.session_state.editing_scary_task_index
+
                             if "editing_scary_task_id" in st.session_state:
                                 del st.session_state.editing_scary_task_id
 
