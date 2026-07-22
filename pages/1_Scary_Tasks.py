@@ -91,9 +91,6 @@ scary_tasks = [
     if task.get("is_scary") is True and task.get("status") == "planned"
 ]
 
-st.write("DEBUG tasks:", tasks)
-st.write("DEBUG scary_tasks:", scary_tasks)
-
 left_col, right_col = st.columns([3.2, 1])
 
 with right_col:
