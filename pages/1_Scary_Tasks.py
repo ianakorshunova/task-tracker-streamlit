@@ -4,11 +4,7 @@ import streamlit as st
 
 from task_utils import create_task, load_css, load_tasks_from_file, save_tasks_to_file
 
-from database import (
-    load_tasks_from_db,
-    update_task_in_db,
-    delete_task_from_db,
-)
+from database import load_tasks_from_db, add_task_to_db, update_task_in_db, delete_task_from_db
 
 SCARY_DONE_MESSAGES = [
     "You spooked out the spooky task!",
@@ -40,6 +36,12 @@ if "scary_done_message" in st.session_state:
 st.session_state.tasks = load_tasks_from_db(current_user_id)
 tasks = st.session_state.tasks
 
+if (
+    "chosen_scary_task" in st.session_state
+    and "id" not in st.session_state.chosen_scary_task
+):
+    del st.session_state.chosen_scary_task
+
 st.session_state.tasks = [
     task for task in load_tasks_from_db(current_user_id)
     if "id" in task
@@ -62,24 +64,35 @@ with st.sidebar:
             if title.strip() == "":
                 st.error("Please enter a task title.")
             else:
-                new_task = create_task(
+                add_task_to_db(
                     title=title,
                     status="planned",
                     priority=priority,
-                    minutes=minutes,
+                    minutes=int(minutes),
                     is_scary=True,
+                    user_id=current_user_id,
                 )
 
-                st.session_state.tasks.append(new_task)
-                save_tasks_to_file(st.session_state.tasks)
+                st.session_state.tasks = load_tasks_from_db(current_user_id)
+
+                if "chosen_scary_task" in st.session_state:
+                    del st.session_state.chosen_scary_task
 
                 st.success(f"Added scary task: {title}")
+                st.rerun()
 
 
+# scary_tasks = [
+#     task for task in tasks
+#     if task.get("is_scary") == True and task["status"] == "planned"
+# ]
 scary_tasks = [
     task for task in tasks
-    if task.get("is_scary") == True and task["status"] == "planned"
+    if task.get("is_scary") is True and task.get("status") == "planned"
 ]
+
+st.write("DEBUG tasks:", tasks)
+st.write("DEBUG scary_tasks:", scary_tasks)
 
 left_col, right_col = st.columns([3.2, 1])
 
@@ -115,21 +128,26 @@ with left_col:
             st.warning(f"Today's scary task: **{chosen_task['title']}**")
 
             if st.button("Mark this task as done"):
-                for task in st.session_state.tasks:
-                    if (
-                        task["title"] == chosen_task["title"]
-                        and task.get("is_scary") == True
-                        and task["status"] == "planned"
-                    ):
-                        task["status"] = "done"
-                        break
+                chosen_task_id = chosen_task.get("id")
 
-                save_tasks_to_file(st.session_state.tasks)
+                if chosen_task_id is not None:
+                    update_task_in_db(
+                        task_id=chosen_task_id,
+                        title=chosen_task["title"],
+                        status="done",
+                        priority=chosen_task["priority"],
+                        minutes=int(chosen_task["minutes"]),
+                        is_scary=chosen_task.get("is_scary", True),
+                        user_id=current_user_id,
+                    )
 
-                st.session_state.scary_done_message = random.choice(SCARY_DONE_MESSAGES)
+                    st.session_state.tasks = load_tasks_from_db(current_user_id)
+                    st.session_state.scary_done_message = random.choice(SCARY_DONE_MESSAGES)
 
-                del st.session_state.chosen_scary_task
-                st.rerun()
+                    if "chosen_scary_task" in st.session_state:
+                        del st.session_state.chosen_scary_task
+
+                    st.rerun()
 
     st.subheader("Planned scary tasks")
 
@@ -140,6 +158,11 @@ with left_col:
         )
     else:
         for scary_index, task in enumerate(scary_tasks):
+            task_id = task.get("id")
+
+            if task_id is None:
+                continue
+
             card_col, empty_col = st.columns([3, 1])
 
             with card_col:
@@ -153,36 +176,23 @@ with left_col:
 
                     st.markdown("<div style='height: 0.7rem;'></div>", unsafe_allow_html=True)
 
-                    if st.button("Edit", key=f"edit_scary_{scary_index}", use_container_width=True):
-                        st.session_state.editing_scary_task_index = scary_index
+                    # if st.button("Edit", key=f"edit_scary_{task_id}", use_container_width=True):
+                    #     st.session_state.editing_scary_task_index = scary_index
+                    #     st.rerun()
+                    if st.button("Edit", key=f"edit_scary_{task_id}", use_container_width=True):
+                        st.session_state.editing_scary_task_id = task_id
                         st.rerun()
 
-                    # if st.button("Del", key=f"delete_scary_{scary_index}", use_container_width=True):
+                    # if st.button("Del", key=f"delete_scary_{task['id']}", use_container_width=True):
                     #     deleted_title = task["title"]
 
-                    #     for index, original_task in enumerate(st.session_state.tasks):
-                    #         if (
-                    #             original_task["title"] == task["title"]
-                    #             and original_task["status"] == task["status"]
-                    #             and original_task["priority"] == task["priority"]
-                    #             and original_task["minutes"] == task["minutes"]
-                    #             and original_task.get("is_scary", False) == task.get("is_scary", False)
-                    #         ):
-                    #             st.session_state.tasks.pop(index)
-                    #             break
-
-                    #     save_tasks_to_file(st.session_state.tasks)
-
-                    #     if "chosen_scary_task" in st.session_state:
-                    #         del st.session_state.chosen_scary_task
-
-                    #     if "editing_scary_task_index" in st.session_state:
-                    #         del st.session_state.editing_scary_task_index
-
-                    #     st.success(f"Deleted scary task: {deleted_title}")
-                    #     st.rerun()
-                    if st.button("Del", key=f"delete_scary_{task['id']}", use_container_width=True):
+                    if st.button("Del", key=f"delete_scary_{task_id}", use_container_width=True):
                         deleted_title = task["title"]
+
+                        delete_task_from_db(task_id, current_user_id)
+
+                        if "chosen_scary_task" in st.session_state:
+                            del st.session_state.chosen_scary_task
 
                         delete_task_from_db(task["id"], current_user_id)
                         st.session_state.tasks = load_tasks_from_db(current_user_id)
@@ -196,7 +206,8 @@ with left_col:
                         st.success(f"Deleted scary task: {deleted_title}")
                         st.rerun()
 
-            if st.session_state.get("editing_scary_task_index") == scary_index:
+            # if st.session_state.get("editing_scary_task_index") == scary_index:
+            if st.session_state.get("editing_scary_task_id") == task_id:
                 st.markdown("#### Edit scary task")
 
                 with st.form(f"edit_scary_task_form_{scary_index}"):
@@ -235,7 +246,8 @@ with left_col:
                             st.error("Please enter a task title.")
                         else:
                             update_task_in_db(
-                                task_id=task["id"],
+                                # task_id=task["id"],
+                                task_id=task_id,
                                 title=edited_title,
                                 status=task["status"],
                                 priority=edited_priority,
@@ -249,8 +261,10 @@ with left_col:
                             if "chosen_scary_task" in st.session_state:
                                 del st.session_state.chosen_scary_task
 
-                            if "editing_scary_task_index" in st.session_state:
-                                del st.session_state.editing_scary_task_index
+                            # if "editing_scary_task_index" in st.session_state:
+                            #     del st.session_state.editing_scary_task_index
+                            if "editing_scary_task_id" in st.session_state:
+                                del st.session_state.editing_scary_task_id
 
                             st.success("Scary task updated.")
                             st.rerun()
