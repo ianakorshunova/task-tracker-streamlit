@@ -2,36 +2,42 @@
 
 A small Streamlit app for tracking tasks, priorities, time, and task status.
 
-This project started as a console-based Python task tracker and was later rebuilt as a multi-page Streamlit app with CSV storage and a simple notebook-style interface.
+This project started as a console-based Python task tracker and was later rebuilt as a multi-page Streamlit app with authentication, PostgreSQL storage, and a soft notebook-style interface.
 
 ## Live demo
 
-[Open the app on Streamlit](https://iana-task-tracker.streamlit.app/)
+Open the demo app on Streamlit:  
+[Live Demo]((https://task-tracker-demo.streamlit.app/))
+
+Demo Mode uses a shared demo workspace. You can add, edit, delete, and reset demo tasks.
 
 ## Data privacy note
 
-The deployed Streamlit app is public. Data entered in the demo version is not private and may be visible to other users.
+The demo app is public and uses a shared demo workspace. Data entered in Demo Mode is not private and may be visible to other users.
 
 Please use only test/demo tasks in the public version. Do not enter personal, sensitive, or confidential information.
 
-For private use, run the app locally or connect it to a private database.
+For private use, run the app locally with your own Streamlit secrets and database connection.
 
 ## Features
 
+- User login and registration
+- Per-user task storage
+- Demo Mode with automatic demo login
+- Reset demo data button
 - Add new tasks
 - Edit existing tasks
 - Delete tasks
-- Track task status: `planned` / `done`
-- Track task priority: `low` / `medium` / `high`
+- Track task status: planned / done
+- Track task priority: low / medium / high
 - Track estimated minutes
-- Save tasks to `tasks.csv`
-- Load tasks from CSV
-- Basic protection against broken or incomplete CSV files
-- Multi-page Streamlit layout:
-  - Main dashboard
-  - Completed Tasks
-  - Scary Tasks
-  - Task Dump
+- Mark tasks as scary
+- Random scary task picker
+- Completed tasks page
+- Task dump page for quick small tasks
+- Multi-page Streamlit layout
+- Custom CSS styling
+- PostgreSQL database storage via Neon
 
 ## Pages
 
@@ -41,7 +47,7 @@ Shows all tasks, total minutes, done minutes, planned minutes, and a quick summa
 
 ### Completed Tasks
 
-Shows completed tasks separately.
+Shows completed tasks separately, with summary stats for completed minutes and completed scary tasks.
 
 ### Scary Tasks
 
@@ -57,7 +63,10 @@ A quick place for small planned tasks that take around 5–10 minutes.
 - Python
 - Streamlit
 - pandas
-- CSV storage
+- PostgreSQL
+- Neon
+- psycopg
+- bcrypt
 - Custom CSS
 
 ## Project structure
@@ -66,9 +75,12 @@ A quick place for small planned tasks that take around 5–10 minutes.
 task_tracker/
 │
 ├── app.py
+├── demo_app.py
+├── task_app.py
+├── auth.py
+├── database.py
 ├── task_utils.py
 ├── style.css
-├── tasks.csv
 ├── requirements.txt
 │
 └── pages/
@@ -85,22 +97,50 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Run the app:
+Create a local Streamlit secrets file:
+
+```bash
+.streamlit/secrets.toml
+```
+
+Example owner mode:
+
+```bash
+APP_MODE = "owner"
+DATABASE_URL = "your-postgresql-connection-string"
+```
+
+Run the owner app:
 
 ```bash
 streamlit run app.py
 ```
 
+Run the demo entrypoint:
+
+```bash
+streamlit run demo_app.py
+```
+
+## Demo mode
+
+Demo mode automatically logs visitors into a shared demo_user workspace.
+
+```bash
+APP_MODE = "demo"
+```
+The demo workspace can be reset with the Reset demo data button.
+
 ## Future improvements
 
 - Add filters by status and priority
-- Improve the summary section
-- Add download backup button
-- Add tests for utility functions
-- Add more polished UI for task cards
-- Deploy to Streamlit Cloud
+- Add password change flow
+- Add optional demo data auto-reset
+- Improve mobile layout
+- Add tests for database and utility functions
+- Add export/download backup option
 
 ## Status
 
-Work in progress.  
-The app is functional locally and is being improved step by step.
+Work in progress.
+The app is deployed on Streamlit Cloud and is being improved step by step.
