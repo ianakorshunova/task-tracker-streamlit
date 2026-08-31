@@ -2,7 +2,7 @@ import random
 
 import streamlit as st
 
-from task_utils import create_task, load_css, load_tasks_from_file, save_tasks_to_file
+from task_utils import load_css
 
 from database import load_tasks_from_db, add_task_to_db, update_task_in_db, delete_task_from_db
 
@@ -81,11 +81,6 @@ with st.sidebar:
                 st.success(f"Added scary task: {title}")
                 st.rerun()
 
-
-# scary_tasks = [
-#     task for task in tasks
-#     if task.get("is_scary") == True and task["status"] == "planned"
-# ]
 scary_tasks = [
     task for task in tasks
     if task.get("is_scary") is True and task.get("status") == "planned"

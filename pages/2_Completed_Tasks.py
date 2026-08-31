@@ -6,7 +6,7 @@ from database import (
 
 import streamlit as st
 
-from task_utils import create_task, load_css, load_tasks_from_file, save_tasks_to_file
+from task_utils import load_css
 
 st.set_page_config(page_title="Completed Tasks", page_icon="✅", layout="wide")
 
@@ -20,11 +20,6 @@ st.markdown(load_css(), unsafe_allow_html=True)
 
 st.title("✅ Completed Tasks")
 st.caption("A small place to see what you have already finished.")
-
-
-if "tasks" not in st.session_state:
-    st.session_state.tasks = load_tasks_from_file()
-
 
 st.session_state.tasks = load_tasks_from_db(current_user_id)
 tasks = st.session_state.tasks

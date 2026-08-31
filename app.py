@@ -2,14 +2,7 @@ import pandas as pd
 import streamlit as st
 from auth import show_auth_screen
 
-from task_utils import (
-    DEFAULT_TASKS,
-    analyze_tasks,
-    create_task,
-    load_css,
-    load_tasks_from_file,
-    save_tasks_to_file,
-)
+from task_utils import analyze_tasks, load_css
 
 from database import (
     load_tasks_from_db,
@@ -17,11 +10,6 @@ from database import (
     update_task_in_db,
     delete_task_from_db,
 )
-
-def add_task(title, status, priority, minutes, is_scary=False):
-    new_task = create_task(title, status, priority, minutes, is_scary)
-    st.session_state.tasks.append(new_task)
-
 
 def remove_task(task_index):
     st.session_state.tasks.pop(task_index)
@@ -79,23 +67,6 @@ with st.sidebar:
                 st.session_state.tasks = load_tasks_from_db(current_user_id)
                 st.success(f"Added task: {title}")
                 st.rerun()
-
-    st.divider()
-
-    st.header("Save / load")
-
-    if st.button("Save tasks"):
-        save_tasks_to_file(st.session_state.tasks)
-        st.success("Tasks saved to tasks.csv.")
-
-    if st.button("Load tasks"):
-        st.session_state.tasks = load_tasks_from_file()
-        st.success("Tasks loaded.")
-
-    if st.button("Reset to default tasks"):
-        st.session_state.tasks = DEFAULT_TASKS.copy()
-        st.warning("Tasks reset to default.")
-
 
 tasks = st.session_state.tasks
 result = analyze_tasks(tasks)
