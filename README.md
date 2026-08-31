@@ -7,7 +7,7 @@ This project started as a console-based Python task tracker and was later rebuil
 ## Live demo
 
 Open the demo app on Streamlit:  
-[Live Demo]((https://task-tracker-demo.streamlit.app/))
+[Live Demo](https://task-tracker-demo.streamlit.app/)
 
 Demo Mode uses a shared demo workspace. You can add, edit, delete, and reset demo tasks.
 
