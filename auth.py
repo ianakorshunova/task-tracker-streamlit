@@ -30,6 +30,45 @@ def create_user(username, password):
             )
             return cur.fetchone()
 
+def get_or_create_demo_user():
+    demo_username = "demo_user"
+    demo_password = st.secrets.get("DEMO_PASSWORD", "demo_password")
+
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT id, username
+                FROM users
+                WHERE username = %s;
+                """,
+                (demo_username,),
+            )
+            user = cur.fetchone()
+
+            if user is not None:
+                return {
+                    "id": user["id"],
+                    "username": user["username"],
+                }
+
+            password_hash = hash_password(demo_password)
+
+            cur.execute(
+                """
+                INSERT INTO users (username, password_hash)
+                VALUES (%s, %s)
+                RETURNING id, username;
+                """,
+                (demo_username, password_hash),
+            )
+            user = cur.fetchone()
+
+            return {
+                "id": user["id"],
+                "username": user["username"],
+            }
+
 
 def login_user(username, password):
     with get_connection() as conn:

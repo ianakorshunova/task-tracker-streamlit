@@ -1,6 +1,6 @@
 import pandas as pd
 import streamlit as st
-from auth import show_auth_screen
+from auth import show_auth_screen, get_or_create_demo_user
 
 from task_utils import analyze_tasks, load_css
 
@@ -17,13 +17,25 @@ def remove_task(task_index):
 
 st.set_page_config(page_title="Task Tracker", page_icon="📝", layout="wide")
 
+APP_MODE = st.secrets.get("APP_MODE", "owner")
+IS_DEMO = APP_MODE == "demo"
+
 if "user" not in st.session_state:
-    show_auth_screen()
-    st.stop()
+    if IS_DEMO:
+        st.session_state.user = get_or_create_demo_user()
+    else:
+        show_auth_screen()
+        st.stop()
 
 current_user_id = st.session_state.user["id"]
 
 st.markdown(load_css(), unsafe_allow_html=True)
+
+if IS_DEMO:
+    st.info(
+        "Demo Mode: you are using a shared demo workspace. "
+        "Changes may be reset."
+    )
 
 st.session_state.tasks = load_tasks_from_db(current_user_id)
 tasks = st.session_state.tasks
