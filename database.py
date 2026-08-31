@@ -64,3 +64,35 @@ def delete_task_from_db(task_id, user_id):
                 """,
                 (task_id, user_id),
             )
+
+def reset_demo_tasks(user_id):
+    demo_tasks = [
+        ("Clean up legacy CSV code", "done", "high", 60, False),
+        ("Prepare portfolio README", "planned", "high", 45, False),
+        ("Review Streamlit demo mode", "done", "medium", 30, False),
+        ("Send client invoice", "planned", "medium", 15, False),
+        ("Apply for localization role", "planned", "high", 40, True),
+        ("Organize task backlog", "planned", "low", 25, False),
+        ("Test mobile layout", "planned", "medium", 20, True),
+    ]
+
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                DELETE FROM tasks
+                WHERE user_id = %s;
+                """,
+                (user_id,),
+            )
+
+            cur.executemany(
+                """
+                INSERT INTO tasks (title, status, priority, minutes, is_scary, user_id)
+                VALUES (%s, %s, %s, %s, %s, %s);
+                """,
+                [
+                    (title, status, priority, minutes, is_scary, user_id)
+                    for title, status, priority, minutes, is_scary in demo_tasks
+                ],
+            )

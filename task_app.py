@@ -3,13 +3,14 @@ import streamlit as st
 
 from auth import show_auth_screen, get_or_create_demo_user
 from task_utils import analyze_tasks, load_css
+
 from database import (
     load_tasks_from_db,
     add_task_to_db,
     update_task_in_db,
     delete_task_from_db,
+    reset_demo_tasks,
 )
-
 
 def run_task_tracker():
     st.set_page_config(page_title="Task Tracker", page_icon="📝", layout="wide")
@@ -46,6 +47,20 @@ def run_task_tracker():
 
             if st.button("Log out"):
                 del st.session_state.user
+                st.rerun()
+
+        if IS_DEMO:
+            st.divider()
+            st.caption("Demo workspace")
+
+            if st.button("Reset demo data", use_container_width=True):
+                reset_demo_tasks(current_user_id)
+                st.session_state.tasks = load_tasks_from_db(current_user_id)
+
+                if "editing_task_index" in st.session_state:
+                    del st.session_state.editing_task_index
+
+                st.success("Demo data reset.")
                 st.rerun()
 
         st.header("Add new task")
