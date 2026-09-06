@@ -33,7 +33,9 @@ def get_current_week_start():
 
 week_start = get_current_week_start()
 
-st.info(f"Current week starts on: {week_start}")
+week_end = week_start + dt.timedelta(days=6)
+
+st.info(f"Current week: {week_start} – {week_end}")
 
 
 with st.sidebar:
