@@ -35,9 +35,13 @@ For private use, run the app locally with your own Streamlit secrets and databas
 - Random scary task picker
 - Completed tasks page
 - Task dump page for quick small tasks
+- Weekly goals with progress tracking
+- Increment weekly goals with a +1 button
+- Per-week goal storage
 - Multi-page Streamlit layout
 - Custom CSS styling
 - PostgreSQL database storage via Neon
+
 
 ## Pages
 
@@ -57,6 +61,11 @@ Includes a small lottery feature that can randomly choose one scary task.
 ### Task Dump
 
 A quick place for small planned tasks that take around 5–10 minutes.
+
+### Week Goals
+
+A page for repeated weekly goals, habits, and progress targets.  
+Users can create weekly goals, track current progress, increment goals with a +1 button, edit goals, and delete them.
 
 ## Tech stack
 
@@ -86,7 +95,8 @@ task_tracker/
 └── pages/
     ├── 1_Scary_Tasks.py
     ├── 2_Completed_Tasks.py
-    └── 3_Task_Dump.py
+    ├── 3_Task_Dump.py
+    └── 4_Week_Goals.py
 ```
 
 ## How to run
@@ -129,7 +139,8 @@ Demo mode automatically logs visitors into a shared demo_user workspace.
 ```bash
 APP_MODE = "demo"
 ```
-The demo workspace can be reset with the Reset demo data button.
+
+The Reset demo data button restores sample tasks and weekly goals.
 
 ## Future improvements
 
@@ -139,6 +150,9 @@ The demo workspace can be reset with the Reset demo data button.
 - Improve mobile layout
 - Add tests for database and utility functions
 - Add export/download backup option
+- Add previous week history
+- Add copy goals to new week
+- Add weekly goal templates
 
 ## Status
 
